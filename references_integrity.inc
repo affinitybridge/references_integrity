@@ -27,6 +27,19 @@ function references_integrity_get_field_behavior($field_name) {
 }
 
 /**
+ * Get the RI message defined for the given field name.
+ */
+function references_integrity_get_delete_message($field_name) {
+  $op = references_integrity_get_field_behavior($field_name);
+  if ($op == REFERENCES_INTEGRITY_BEHAVIOR_REMOVE_REFERENCE){
+    $default_message = t('References to this entity will be deleted too.');
+  } elseif ($op == REFERENCES_INTEGRITY_BEHAVIOR_REMOVE_ENTITY){
+    $default_message = t('Entities referencing this entity will be deleted too.');
+  }
+  return variable_get('references_integrity_delete_message_' . $field_name, '');
+}
+
+/**
  * Get information about reference fields of the given type.
  *
  * @param $field_type
@@ -188,13 +201,17 @@ function references_integrity_get_target_entity_type_and_id($field){
  *   Field types supported are 'node_reference', 'user_reference', and 'entityreference'
  * @param $field_value
  *   A node id (nid), user id (uid), or entity_id.
+ * @param $apply (boolean)
+ *   If false items will not be queued. Used to determined how many items will
+ *   be modified.
  */
-function references_integrity_apply($field_type, $object) {
+function references_integrity_apply($field_type, $object, $apply = TRUE) {
 
   $id = references_integrity_get_id_key($field_type);
 
   $queue = DrupalQueue::get('references_integrity');
   $queue->createQueue();
+  $items = array();
 
   // Get all references field instances.
   foreach (references_integrity_get_reference_fields($field_type, FALSE) as $field) {
@@ -218,10 +235,17 @@ function references_integrity_apply($field_type, $object) {
             'op' => $field['ri_behavior']
           );
 
-          // Queue the item for cron processing.
-          $queue->createItem($item);
+          if ($apply){
+            // Queue the item for cron processing.
+            $queue->createItem($item);
+          } else {
+            $items[] = $item;
+          }
         }
       }
     }
+  }
+  if (! $apply){
+    return $items;
   }
 }

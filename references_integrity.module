@@ -149,6 +149,9 @@ function references_integrity_type_load($type, $map) {
 
 /**
  * Implements hook_form_FORM_ID_alter().
+ *
+ * Add the reference integrity settings to the field settings.
+ *
  */
 function references_integrity_form_field_ui_field_settings_form_alter(&$form, $form_state, $form_id) {
   if (!in_array($form['field']['type']['#value'], references_integrity_references())) {
@@ -161,11 +164,31 @@ function references_integrity_form_field_ui_field_settings_form_alter(&$form, $f
 }
 
 /**
+ * Implementation of hook_form_FORM_ID_alter().
+ *
+ * Provide a warning that referencing entities or entity references will also
+ * be removed.
+ */
+function references_integrity_form_node_delete_confirm_alter(&$form, $form_state) {
+  dpm($form);
+  module_load_include('inc', 'references_integrity');
+  $items = references_integrity_apply(REFERENCES_INTEGRITY_REFERENCE_NODE, $form['#node'], FALSE);
+  if (count($items)){
+    foreach($items as $item) {
+        dpm($item);
+      $message = references_integrity_get_delete_message($item['field_name']);
+      $link = l(t('View referencing ' . $item['entity_type'] . '.'), 'node/' . $item['entity_id']);
+      drupal_set_message($message . ' ' . $link, 'warning');
+    }
+  }
+}
+
+/**
  * Implements hook_node_delete().
  */
 function references_integrity_node_delete($node) {
   module_load_include('inc', 'references_integrity');
-  references_integrity_apply(REFERENCES_INTEGRITY_REFERENCE_NODE, $node);
+  references_integrity_apply(REFERENCES_INTEGRITY_REFERENCE_NODE, $node, TRUE);
 }
 
 /**
@@ -173,7 +196,7 @@ function references_integrity_node_delete($node) {
  */
 function references_integrity_user_delete($account) {
   module_load_include('inc', 'references_integrity');
-  references_integrity_apply(REFERENCES_INTEGRITY_REFERENCE_USER, $account);
+  references_integrity_apply(REFERENCES_INTEGRITY_REFERENCE_USER, $account, TRUE);
 }
 
 /**
@@ -181,7 +204,7 @@ function references_integrity_user_delete($account) {
  */
 function references_integrity_entity_delete($entity, $type) {
   module_load_include('inc', 'references_integrity');
-  references_integrity_apply(REFERENCES_INTEGRITY_REFERENCE_ENTITY, $entity);
+  references_integrity_apply(REFERENCES_INTEGRITY_REFERENCE_ENTITY, $entity, TRUE);
 }
 /**
  * implements hook_cron().
