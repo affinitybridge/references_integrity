@@ -12,9 +12,9 @@ OVERVIEW
 
 This module provides a method to enforce referential integrity rules for
 References (http://drupal.org/project/references) fields (user and node
-reference) or Entity References (https://www.drupal.org/project/entityreference).
-In other words, it allows you to decide what to do with reference
-values when a referenced entity (node, user, or entity) is deleted.
+reference) or Entity Reference (https://www.drupal.org/project/entityreference).
+In other words, it allows you to decide what to do with reference values when a
+referenced entity (node, user, or entity) is deleted.
 
 The problem:
 

@@ -44,7 +44,7 @@ function _references_integrity_field_settings_form_alter_submit($form, &$form_st
 /**
  * Build the orphan references report for all fields.
  */
-function references_integrity_orphan_references_check_all() {
+function references_integrity_orphan_references_check_all($reference_type = 'all') {
   // Include common module functions.
   module_load_include('inc', 'references_integrity');
 
@@ -56,7 +56,9 @@ function references_integrity_orphan_references_check_all() {
   // Load information about all reference fields in the system.
   $reference_fields = array();
   foreach (array('user_reference', 'node_reference', 'entityreference') as $field_type) {
-    $reference_fields = array_merge($reference_fields, references_integrity_get_reference_fields($field_type));
+    if ($field_type == $reference_type || $reference_type == 'all'){
+      $reference_fields = array_merge($reference_fields, references_integrity_get_reference_fields($field_type));
+    }
   }
 
   // Render the report.
@@ -160,7 +162,6 @@ function references_integrity_orphan_references_check_field($form, &$form_state,
     $query->entityCondition('bundle', $field['bundle']);
   }
   $result = $query->execute();
-
 
   while (list($type, $entities) = each($result)) {
 

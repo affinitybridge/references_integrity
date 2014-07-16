@@ -73,9 +73,47 @@ function references_integrity_menu() {
     'page callback' => 'references_integrity_orphan_references_check_all',
     'access arguments' => array('administer references integrity'),
     'file' => 'references_integrity.admin.inc',
-    'type' => MENU_LOCAL_TASK,
+    'type' => MENU_LOCAL_TASK | MENU_NORMAL,
     'weight' => 10,
   );
+
+  // Tabs begin here.
+  $items['admin/content/orphan-references/all'] = array(
+    'title' => 'All references',
+    'type' => MENU_DEFAULT_LOCAL_TASK,
+    'page callback' => 'references_integrity_orphan_references_check_all',
+    'page arguments' => array('all'),
+    'access arguments' => array('administer references integrity'),
+    'file' => 'references_integrity.admin.inc',
+    'weight' => -10,
+  );
+ $items['admin/content/orphan-references/node'] = array(
+    'title' => 'Node references',
+    'type' => MENU_LOCAL_TASK,
+    'page callback' => 'references_integrity_orphan_references_check_all',
+    'page arguments' => array('node_reference'),
+    'access arguments' => array('administer references integrity'),
+    'file' => 'references_integrity.admin.inc',
+    'weight' => -10,
+  );
+  $items['admin/content/orphan-references/user'] = array(
+    'title' => 'User references',
+    'page callback' => 'references_integrity_orphan_references_check_all',
+    'page arguments' => array('user_reference'),
+    'access arguments' => array('administer references integrity'),
+    'file' => 'references_integrity.admin.inc',
+    'type' => MENU_LOCAL_TASK,
+  );
+  $items['admin/content/orphan-references/entity'] = array(
+    'title' => 'Entity references',
+    'page callback' => 'references_integrity_orphan_references_check_all',
+    'page arguments' => array('entityreference'),
+    'access arguments' => array('administer references integrity'),
+    'file' => 'references_integrity.admin.inc',
+    'type' => MENU_LOCAL_TASK,
+  );
+
+
   return $items;
 }
 

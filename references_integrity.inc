@@ -124,7 +124,6 @@ function references_integrity_get_field_info($field, $counters = TRUE) {
       else {
         $query = new EntityFieldQuery();
         $query->entityCondition('entity_type', $target_entity_type)
-          ->propertyCondition('status', 1)
           ->propertyCondition($target_entity_id, array_unique($references), 'IN');
         $efq_result = $query->execute();
         if (isset($efq_result[$target_entity_type])) {
