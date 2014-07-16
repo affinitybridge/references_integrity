@@ -22,7 +22,7 @@ function _references_integrity_field_settings_form_alter(&$form, $form_state, $f
     '#type' => 'textfield',
     '#title' => t('Custom delete message'),
     '#default_value' => variable_get('references_integrity_delete_message_' . $field_name, ''),
-    '#description' => t('Warn your user that referencial integrity behavior will be enforced upon deletion of @entities referenced from this field.', array('@entities' => $field_entities)),
+    '#description' => t('Warn your user that referential integrity behavior will be enforced upon deletion of @entities referenced from this field.', array('@entities' => $field_entities)),
     '#states' => array(
       'visible' => array(
         ':input[name="field[references_integrity_behavior]"]' => array(array('value' => 'remove reference'), array('value' => 'remove entity')),
