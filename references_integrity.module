@@ -170,12 +170,10 @@ function references_integrity_form_field_ui_field_settings_form_alter(&$form, $f
  * be removed.
  */
 function references_integrity_form_node_delete_confirm_alter(&$form, $form_state) {
-  dpm($form);
   module_load_include('inc', 'references_integrity');
   $items = references_integrity_apply(REFERENCES_INTEGRITY_REFERENCE_NODE, $form['#node'], FALSE);
   if (count($items)){
     foreach($items as $item) {
-        dpm($item);
       $message = references_integrity_get_delete_message($item['field_name']);
       $link = l(t('View referencing ' . $item['entity_type'] . '.'), 'node/' . $item['entity_id']);
       drupal_set_message($message . ' ' . $link, 'warning');
