@@ -4,6 +4,7 @@
 ;;
 ;; Original author: markus_petrux (http://drupal.org/user/39593)
 ;; Drupal 7 author: claudiu.cristea (http://drupal.org/user/56348)
+;; Entity reference extension: Floydm (http://drupal.org/user/502450)
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 OVERVIEW
@@ -11,16 +12,16 @@ OVERVIEW
 
 This module provides a method to enforce referential integrity rules for
 References (http://drupal.org/project/references) fields (user and node
-reference). In other words, it allows you to decide what to do with reference
-values when a referenced entity (node or user) is deleted.
+reference) or Entity References (https://www.drupal.org/project/entityreference).
+In other words, it allows you to decide what to do with reference
+values when a referenced entity (node, user, or entity) is deleted.
 
 The problem:
 
-References (node and user reference) fields may contain values that point to
-nodes or users that have been removed. References module does nothing when a
-node or user is removed with the values of fields that reference them. So after
-some time, your node and user reference fields may contain records that point to
-nowhere. Orphans.
+Reference fields may contain values that point to entities, nodes, or users that
+have been removed. References module does nothing when a node or user is removed
+with the values of fields that reference them. So after some time, your node and
+user reference fields may contain records that point to nowhere. Orphans.
 
 - Extension for reference fields:
 
@@ -30,7 +31,8 @@ nowhere. Orphans.
   Available options are:
 
   - None (default).
-  - Delete also field items when referenced nodes are deleted..
+  - Delete also field items when referenced entities are deleted.
+  - Delete also referencing entities when referenced entities are deleted.
 
 - Monitoring orphan records:
 
@@ -45,13 +47,16 @@ nowhere. Orphans.
   should make backups of your database before processing orphans should you need
   to revert any changes made from this panel.
 
+- Exporting settings:
+
+  Drupal 7 does not allow modules other that the modules that define a field add
+  settings to a field (see https://www.drupal.org/node/1308860), so all field
+  settings are stored in the variables table and can be exported with Strongarm.
 
 REQUIREMENTS
 ============
 
-- References (node and user reference modules).
-  http://drupal.org/project/references
-
+  References or Entity References to make this module useful.
 
 INSTALLATION
 ============
@@ -63,10 +68,11 @@ INSTALLATION
 
 - Enable the module.
 
-- Review the settings of your user and node reference fields. You will
+- Review the settings of your reference fields. You will
   find a new option labelled "Referential integrity behavior". It is
   disabled by default.
 
+- View the orphaned references report at /admin/content/orphan-references
 
 CREDITS
 =======

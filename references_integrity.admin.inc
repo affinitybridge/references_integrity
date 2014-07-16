@@ -18,6 +18,17 @@ function _references_integrity_field_settings_form_alter(&$form, $form_state, $f
     '#default_value' => variable_get('references_integrity_behavior_' . $field_name, ''),
     '#description' => t('This option defines the referential integrity behavior that will be enforced upon deletion of @entities referenced from this field.', array('@entities' => $field_entities)),
   );
+  $form['field']['references_integrity_delete_message'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Custom delete message'),
+    '#default_value' => variable_get('references_integrity_delete_message_' . $field_name, ''),
+    '#description' => t('Warn your user that referencial integrity behavior will be enforced upon deletion of @entities referenced from this field.', array('@entities' => $field_entities)),
+    '#states' => array(
+      'visible' => array(
+        ':input[name="field[references_integrity_behavior]"]' => array(array('value' => 'remove reference'), array('value' => 'remove entity')),
+      ),
+    ),
+  );
   $form['#submit'][] = '_references_integrity_field_settings_form_alter_submit';
 }
 
@@ -27,6 +38,7 @@ function _references_integrity_field_settings_form_alter(&$form, $form_state, $f
 function _references_integrity_field_settings_form_alter_submit($form, &$form_state) {
   $field =& $form_state['values']['field'];
   variable_set('references_integrity_behavior_' . $field['field_name'], $field['references_integrity_behavior']);
+  variable_set('references_integrity_delete_message_' . $field['field_name'], $field['references_integrity_delete_message']);
 }
 
 /**

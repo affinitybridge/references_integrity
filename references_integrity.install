@@ -9,7 +9,6 @@
  * Implementation of hook_uninstall().
  */
 function references_integrity_uninstall() {
-
   // Delete all module variables and then clear the variables cache.
   db_query("DELETE FROM {variable} WHERE name LIKE 'references\_integrity\_%'");
   cache_clear_all('variables', 'cache_bootstrap');

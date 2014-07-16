@@ -13,8 +13,9 @@
  */
 function references_integrity_get_behavior_options($field_entities) {
   return array(
-    REFERENCES_INTEGRITY_BEHAVIOR_NONE => t('None.'),
-    REFERENCES_INTEGRITY_BEHAVIOR_REMOVE => t('Delete also field items when referenced @entities are deleted.', array('@entities' => $field_entities)),
+    REFERENCES_INTEGRITY_BEHAVIOR_NONE             => t('Do nothing.'),
+    REFERENCES_INTEGRITY_BEHAVIOR_REMOVE_REFERENCE => t('Delete references to @entities when referenced @entities are deleted.', array('@entities' => $field_entities)),
+    REFERENCES_INTEGRITY_BEHAVIOR_REMOVE_ENTITY    => t('Delete this entity when referenced @entities are deleted.', array('@entities' => $field_entities)),
   );
 }
 

@@ -17,7 +17,8 @@ define('REFERENCES_INTEGRITY_REFERENCE_ENTITY', 'entityreference');
  * Referential integrity behaviors.
  */
 define('REFERENCES_INTEGRITY_BEHAVIOR_NONE', '');
-define('REFERENCES_INTEGRITY_BEHAVIOR_REMOVE', 'remove');
+define('REFERENCES_INTEGRITY_BEHAVIOR_REMOVE_REFERENCE', 'remove reference');
+define('REFERENCES_INTEGRITY_BEHAVIOR_REMOVE_ENTITY', 'remove entity');
 
 /**
  * Global options for admin reports.
