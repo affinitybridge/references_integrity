@@ -1,0 +1,12 @@
+name = References Integrity
+description = This module provides a method to enforce referential integrity rules for References.
+dependencies[] = references
+package = Fields
+core = 7.x
+
+
+; Information added by drush on 2014-06-24
+version = "e7966c33"
+project = "references_integrity"
+datestamp = "1403631069"
+

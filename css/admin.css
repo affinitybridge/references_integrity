@@ -1,0 +1,42 @@
+
+/* Cells. */
+.references-integrity-cell-numeric {
+  padding-right: 1em;
+  text-align: right;
+}
+.references-integrity-cell-status {
+  text-align: center;
+}
+.references-integrity-cell-action {
+  padding-right: 0.5em;
+  text-align: right;
+}
+
+/* Icons. */
+div.references-integrity-status-ok {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  background: url(../images/ok.png) no-repeat 0 0;
+}
+div.references-integrity-status-warning {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  background: url(../images/warning.png) no-repeat 0 0;
+}
+
+/* Operations. */
+.references-integrity-operations-backups {
+  float: left;
+  padding-top: 1em;
+  padding-bottom: 1em;
+}
+.references-integrity-operations-submit {
+  float: right;
+  padding-top: 1em;
+  padding-bottom: 1em;
+}
+.references-integrity-operations-backups .form-item {
+  margin: 0;
+}

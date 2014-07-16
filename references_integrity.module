@@ -1,0 +1,179 @@
+<?php
+
+/**
+ * @file
+ * This module provides a method to enforce referential integrity rules for References.
+ */
+
+/**
+ * Referenced types.
+ */
+define('REFERENCES_INTEGRITY_REFERENCE_NODE', 'node_reference');
+define('REFERENCES_INTEGRITY_REFERENCE_USER', 'user_reference');
+define('REFERENCES_INTEGRITY_REFERENCE_ENTITY', 'entityreference');
+
+
+/**
+ * Referential integrity behaviors.
+ */
+define('REFERENCES_INTEGRITY_BEHAVIOR_NONE', '');
+define('REFERENCES_INTEGRITY_BEHAVIOR_REMOVE', 'remove');
+
+/**
+ * Global options for admin reports.
+ */
+define('REFERENCES_INTEGRITY_CRON', 20);
+
+/**
+ * Implements hook_theme().
+ */
+function references_integrity_theme() {
+  return array(
+    'references_integrity_status_icon' => array(
+      'arguments' => array('status' => NULL, 'title' => NULL),
+      'file' => 'references_integrity.admin.inc',
+    ),
+  );
+}
+
+/**
+ * Implements hook_perm().
+ */
+function references_integrity_permission() {
+  return array(
+    'administer references integrity' => array(
+      'title' => t('Administer References Integrity'),
+      'description' => t('Allow administration of several tasks related to references integrity such as orphan references.'),
+    ),
+  );
+}
+
+/**
+ * Implements hook_menu().
+ */
+function references_integrity_menu() {
+  $items = array();
+
+  $items['admin/content/orphan-references/%references_integrity_entity_type/%references_integrity_bundle/%references_integrity_field_instance/%references_integrity_type'] = array(
+    'title' => 'Instance with orphan references',
+    'description' => 'Handle orphan references of a specific instance.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('references_integrity_orphan_references_check_field', 3, 4, 5, 6),
+    'access arguments' => array('administer references integrity'),
+    'load arguments' => array('%map'),
+    'file' => 'references_integrity.admin.inc',
+    'type' => MENU_LOCAL_TASK,
+    'weight' => 11,
+  );
+
+  $items['admin/content/orphan-references'] = array(
+    'title' => 'Orphan references',
+    'description' => 'Referential integrity report to monitor orphan records in node and user reference.',
+    'page callback' => 'references_integrity_orphan_references_check_all',
+    'access arguments' => array('administer references integrity'),
+    'file' => 'references_integrity.admin.inc',
+    'type' => MENU_LOCAL_TASK,
+    'weight' => 10,
+  );
+  return $items;
+}
+
+/**
+ * Menu loader for %references_integrity_entity_type.
+ */
+function references_integrity_entity_type_load($entity_type, $map) {
+  $entity_info = entity_get_info($entity_type);
+  return empty($entity_info) ? FALSE : ($entity_info + array('entity_type' => $entity_type));
+}
+
+/**
+ * Menu loader for %references_integrity_bundle.
+ */
+function references_integrity_bundle_load($bundle_name, $map) {
+  return empty($map[3]['bundles'][$bundle_name]) ? FALSE : ($map[3]['bundles'][$bundle_name] + array('bundle' => $bundle_name));
+}
+
+/**
+ * Menu loader for %references_integrity_field_instance.
+ */
+function references_integrity_field_instance_load($field, $map) {
+  $instance_info = field_info_instance($map[3]['entity_type'], $field, $map[4]['bundle']);
+  return empty($instance_info) ? FALSE : ($instance_info + array('field_info' => field_info_field($field)));
+}
+
+/**
+ * Menu loader for %references_integrity_type.
+ */
+function references_integrity_type_load($type, $map) {
+  return in_array($type, references_integrity_references()) ? $type : FALSE;
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter().
+ */
+function references_integrity_form_field_ui_field_settings_form_alter(&$form, $form_state, $form_id) {
+  if (!in_array($form['field']['type']['#value'], references_integrity_references())) {
+    return;
+  }
+
+  module_load_include('inc', 'references_integrity');
+  module_load_include('inc', 'references_integrity', 'references_integrity.admin');
+  _references_integrity_field_settings_form_alter($form, $form_state, $form_id);
+}
+
+/**
+ * Implements hook_node_delete().
+ */
+function references_integrity_node_delete($node) {
+  module_load_include('inc', 'references_integrity');
+  references_integrity_apply(REFERENCES_INTEGRITY_REFERENCE_NODE, $node);
+}
+
+/**
+ * Implements hook_user_delete().
+ */
+function references_integrity_user_delete(&$account) {
+  module_load_include('inc', 'references_integrity');
+  references_integrity_apply(REFERENCES_INTEGRITY_REFERENCE_USER, $account);
+}
+
+/**
+ * Implements hook_entity_delete().
+ */
+function references_integrity_entity_delete(&$entity, $type) {
+  module_load_include('inc', 'references_integrity');
+  references_integrity_apply(REFERENCES_INTEGRITY_REFERENCE_ENTITY, $account);
+}
+/**
+ * implements hook_cron().
+ */
+function references_integrity_cron() {
+  // Consume the queue.
+  module_load_include('cron.inc', 'references_integrity');
+  references_integrity_fetch();
+}
+
+/**
+ * Return referenceable entities.
+ *
+ * @return
+ *   Array with the referenceable field types.
+ */
+function references_integrity_references() {
+  static $references = array(REFERENCES_INTEGRITY_REFERENCE_NODE, REFERENCES_INTEGRITY_REFERENCE_USER, REFERENCES_INTEGRITY_REFERENCE_ENTITY);
+  return $references;
+}
+
+/**
+ * Get the ID key based on reference type.
+ *
+ * @param $reference_type
+ *   String with the reference type. Can be "node_reference" or "user_reference" or "entityreference".
+ *
+ * @return
+ *   String: "nid" or "uid".
+ */
+function references_integrity_get_id_key($reference_type) {
+  static $keys = array(REFERENCES_INTEGRITY_REFERENCE_NODE => 'nid', REFERENCES_INTEGRITY_REFERENCE_USER => 'uid', REFERENCES_INTEGRITY_REFERENCE_ENTITY => 'target_id');
+  return in_array($reference_type, array_keys($keys)) ? $keys[$reference_type] : FALSE;
+}
