@@ -135,17 +135,8 @@ function references_integrity_orphan_references_check_field($form, &$form_state,
 
   // Include common module functions.
   module_load_include('inc', 'references_integrity');
-
-
   $id = references_integrity_get_id_key($field_type);
-
-  if ($field_type == 'user_reference'){
-    $target_entity_type = 'user';
-  } else if ($field_type == 'node_reference'){
-    $target_entity_type = 'node';
-  } elseif ($field_type == 'entityreference'){
-    $target_entity_type = $field['field_info']['settings']['target_type'];
-  }
+  list($target_entity_type, $target_entity_id) = references_integrity_get_target_entity_type_and_id($field);
 
   $header = array(
     'entity_id' => array('data' => t('ID')),
@@ -281,7 +272,7 @@ function references_integrity_orphan_references_check_field_submit($form, &$form
   foreach ($items as $item) {
     $queue->createItem($item);
   }
-  drupal_set_message(t('The selected records have been queued for processing on cron.'));
+  drupal_set_message(t('The selected records have been queued for processing on cron. You can <a target="_blank" href="/admin/reports/status/run-cron">run cron now</a>.'));
 }
 
 /**

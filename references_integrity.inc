@@ -101,21 +101,7 @@ function references_integrity_get_field_info($field, $counters = TRUE) {
       // Total count is the count of references, not of referring entities.
       $total_count = count($references);
 
-     // TODO put into a function and share with references_integrity_orphan_references_check_field($form, &$form_state, $entity_type, $bundle, $field, $field_type)
-      if ($field['type'] == 'user_reference'){
-        $target_entity_type = 'user';
-        $target_entity_id = 'uid';
-      } else if ($field['type'] == 'node_reference'){
-        $target_entity_type = 'node';
-        $target_entity_id = 'nid';
-      } elseif ($field['type'] == 'entityreference'){
-        if (isset($field['field_info']['settings']['target_type'])){
-          $target_entity_type = $field['field_info']['settings']['target_type'];
-        } else {
-          list($target_entity_type, $garbage) = each($field['foreign keys']);
-          $target_entity_type = str_replace('_data', '', $target_entity_type);
-        }
-      }
+      list($target_entity_type, $target_entity_id) = references_integrity_get_target_entity_type_and_id($field);
       $valid_referenced_ids = array();
       // The ids of entities that actually exist
       if (!isset($target_entity_id)) {
@@ -165,12 +151,43 @@ function references_integrity_get_field_info($field, $counters = TRUE) {
 }
 
 /**
+ *  function references_integrity_get_target_entity_type_and_id
+ *
+ *  - Return the foreign key information needed for the EFQ
+ *
+ *  @param $field
+ *
+ *  list($target_entity_type, $target_entity_id) = references_integrity_get_target_entity_type_and_id($field);
+ */
+function references_integrity_get_target_entity_type_and_id($field){
+
+    if ($field['type'] == 'user_reference'){
+      $target_entity_type = 'user';
+      $target_entity_id = 'uid';
+    } else if ($field['type'] == 'node_reference'){
+      $target_entity_type = 'node';
+      $target_entity_id = 'nid';
+    } elseif ($field['type'] == 'entityreference'){
+      if (isset($field['field_info']['settings']['target_type'])){
+        $target_entity_type = $field['field_info']['settings']['target_type'];
+      } else {
+        list($target_entity_type, $garbage) = each($field['foreign keys']);
+        $target_entity_type = str_replace('_data', '', $target_entity_type);
+      }
+      $target_entity_id = NULL;
+    }
+    return array($target_entity_type, $target_entity_id);
+}
+
+
+/**
  * Apply referential integrity rule to the given object id.
+ * Called prior to deleting an entity.
  *
  * @param $field_type
  *   Field types supported are 'node_reference', 'user_reference', and 'entityreference'
  * @param $field_value
- *   A node id (nid) or user id (uid).
+ *   A node id (nid), user id (uid), or entity_id.
  */
 function references_integrity_apply($field_type, $object) {
 
@@ -183,7 +200,7 @@ function references_integrity_apply($field_type, $object) {
   foreach (references_integrity_get_reference_fields($field_type, FALSE) as $field) {
 
     // Process only if the admin enforced referential integrity.
-    if ($field['ri_behavior'] == REFERENCES_INTEGRITY_BEHAVIOR_REMOVE) {
+    if ($field['ri_behavior'] == REFERENCES_INTEGRITY_BEHAVIOR_REMOVE_REFERENCE || $field['ri_behavior'] == REFERENCES_INTEGRITY_BEHAVIOR_REMOVE_ENTITY) {
       $query = new EntityFieldQuery;
       $query->entityCondition('entity_type', $field['entity_type']);
       $query->entityCondition('bundle', $field['bundle']);
@@ -198,6 +215,7 @@ function references_integrity_apply($field_type, $object) {
             'field_name' => $field['field_name'],
             'column' => $id,
             'references' => array($object->{$id}),
+            'op' => $field['ri_behavior']
           );
 
           // Queue the item for cron processing.
