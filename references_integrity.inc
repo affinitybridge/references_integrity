@@ -168,7 +168,7 @@ function references_integrity_get_field_info($field, $counters = TRUE) {
  * Apply referential integrity rule to the given object id.
  *
  * @param $field_type
- *   Field types supported are 'node_reference' and 'user_reference'.
+ *   Field types supported are 'node_reference', 'user_reference', and 'entityreference'
  * @param $field_value
  *   A node id (nid) or user id (uid).
  */

@@ -23,7 +23,7 @@ define('REFERENCES_INTEGRITY_BEHAVIOR_REMOVE_ENTITY', 'remove entity');
 /**
  * Global options for admin reports.
  */
-define('REFERENCES_INTEGRITY_CRON', 20);
+define('REFERENCES_INTEGRITY_CRON', 50);
 
 /**
  * Implements hook_theme().
@@ -171,7 +171,7 @@ function references_integrity_node_delete($node) {
 /**
  * Implements hook_user_delete().
  */
-function references_integrity_user_delete(&$account) {
+function references_integrity_user_delete($account) {
   module_load_include('inc', 'references_integrity');
   references_integrity_apply(REFERENCES_INTEGRITY_REFERENCE_USER, $account);
 }
@@ -179,9 +179,9 @@ function references_integrity_user_delete(&$account) {
 /**
  * Implements hook_entity_delete().
  */
-function references_integrity_entity_delete(&$entity, $type) {
+function references_integrity_entity_delete($entity, $type) {
   module_load_include('inc', 'references_integrity');
-  references_integrity_apply(REFERENCES_INTEGRITY_REFERENCE_ENTITY, $account);
+  references_integrity_apply(REFERENCES_INTEGRITY_REFERENCE_ENTITY, $entity);
 }
 /**
  * implements hook_cron().
@@ -210,7 +210,7 @@ function references_integrity_references() {
  *   String with the reference type. Can be "node_reference" or "user_reference" or "entityreference".
  *
  * @return
- *   String: "nid" or "uid".
+ *   String: "nid" or "uid" or "target_id".
  */
 function references_integrity_get_id_key($reference_type) {
   static $keys = array(REFERENCES_INTEGRITY_REFERENCE_NODE => 'nid', REFERENCES_INTEGRITY_REFERENCE_USER => 'uid', REFERENCES_INTEGRITY_REFERENCE_ENTITY => 'target_id');

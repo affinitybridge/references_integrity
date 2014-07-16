@@ -226,11 +226,13 @@ function references_integrity_orphan_references_check_field($form, &$form_state,
       '#prefix' => '<div class="references-integrity-operations-backups">',
       '#suffix' => '</div>',
     );
-    $form['operations']['remove'] = array(
+    $form['operations']['remove reference'] = array(
       '#type' => 'submit',
       '#value' => t('Remove orphan references'),
-      '#prefix' => '<div class="references-integrity-operations-submit">',
-      '#suffix' => '</div>',
+    );
+    $form['operations']['remove entity'] = array(
+      '#type' => 'submit',
+      '#value' => t('Remove orphaned entities'),
     );
   }
 
@@ -270,6 +272,7 @@ function references_integrity_orphan_references_check_field_submit($form, &$form
         'field_name' => $values['field_name'],
         'column' => $values['column'],
         'references' => array(),
+        'op' =>  $values['op'] == 'Remove orphaned entities' ?  REFERENCES_INTEGRITY_BEHAVIOR_REMOVE_ENTITY : REFERENCES_INTEGRITY_BEHAVIOR_REMOVE_REFERENCE
       );
     }
     $items[$key]['references'][] = $id;

@@ -20,19 +20,24 @@ function references_integrity_fetch() {
     $field_name = $item->data['field_name'];
     $column = $item->data['column'];
     $entity = reset(entity_load($entity_type, array($entity_id)));
+    $op = $item->data['op'];
 
-    // Iterate deeply to find the reference.
-    foreach ($entity->{$field_name} as $language_code => $delta_group) {
-      foreach ($delta_group as $delta => $delta_item) {
-        if (in_array($delta_item[$column], $item->data['references'])) {
-          unset($entity->{$field_name}[$language_code][$delta]);
+    if ($op == 'remove reference'){
+      // Iterate deeply to find the reference.
+      foreach ($entity->{$field_name} as $language_code => $delta_group) {
+        foreach ($delta_group as $delta => $delta_item) {
+          if (in_array($delta_item[$column], $item->data['references'])) {
+              unset($entity->{$field_name}[$language_code][$delta]);
+          }
         }
       }
+      entity_save($entity_type, $entity);
+      watchdog('references_integrity', 'Orphan references: @orphans removed from field "@field_name", entity "@entity_type", @id = @entity_id', array('@orphans' => implode(', ', $item->data['references']), '@field_name' => $field_name, '@entity_type' => $entity_type, '@id' => $column, '@entity_id' => $entity_id));
+
+    } elseif ($op == 'remove entity'){
+      entity_delete($entity_type, $entity_id);
+      watchdog('references_integrity', 'Orphan references: @entity_type @entity_id deleted', array('@entity_type' => $entity_type, '@entity_id' => $entity_id));
     }
-
-    entity_save($entity_type, $entity);
-
-    watchdog('references', 'Orphan refereneces: @orphans removed from field "@field_name", entity "@entity_type", @id = @entity_id', array('@orphans' => implode(', ', $item->data['references']), '@field_name' => $field_name, '@entity_type' => $entity_type, '@id' => $column, '@entity_id' => $entity_id));
 
     $count++;
     $queue->deleteItem($item);
