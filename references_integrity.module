@@ -21,11 +21,6 @@ define('REFERENCES_INTEGRITY_BEHAVIOR_REMOVE_REFERENCE', 'remove reference');
 define('REFERENCES_INTEGRITY_BEHAVIOR_REMOVE_ENTITY', 'remove entity');
 
 /**
- * Global options for admin reports.
- */
-define('REFERENCES_INTEGRITY_CRON', 50);
-
-/**
  * Implements hook_theme().
  */
 function references_integrity_theme() {
@@ -172,6 +167,8 @@ function references_integrity_form_field_ui_field_settings_form_alter(&$form, $f
 function references_integrity_form_node_delete_confirm_alter(&$form, $form_state) {
   module_load_include('inc', 'references_integrity');
   $items = references_integrity_apply(REFERENCES_INTEGRITY_REFERENCE_NODE, $form['#node'], FALSE);
+  $items += references_integrity_apply(REFERENCES_INTEGRITY_REFERENCE_ENTITY, $form['#node'], FALSE);
+
   if (count($items)){
     foreach($items as $item) {
       $message = references_integrity_get_delete_message($item['field_name']);
@@ -237,3 +234,13 @@ function references_integrity_get_id_key($reference_type) {
   static $keys = array(REFERENCES_INTEGRITY_REFERENCE_NODE => 'nid', REFERENCES_INTEGRITY_REFERENCE_USER => 'uid', REFERENCES_INTEGRITY_REFERENCE_ENTITY => 'target_id');
   return in_array($reference_type, array_keys($keys)) ? $keys[$reference_type] : FALSE;
 }
+
+/**
+ * Additional submit handler for reference fields.
+ */
+function _references_integrity_field_settings_form_alter_submit($form, &$form_state) {
+  $field =& $form_state['values']['field'];
+  variable_set('references_integrity_behavior_' . $field['field_name'], $field['references_integrity_behavior']);
+  variable_set('references_integrity_delete_message_' . $field['field_name'], $field['references_integrity_delete_message']);
+}
+

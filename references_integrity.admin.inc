@@ -10,7 +10,15 @@
  */
 function _references_integrity_field_settings_form_alter(&$form, $form_state, $form_id) {
   $field_name = $form['field']['field_name']['#value'];
-  $field_entities = ($form['field']['type']['#value'] == 'node_reference' ? t('nodes') : t('users'));
+  if ($form['field']['type']['#value'] == 'node_reference'){
+    $field_entities = t('nodes');
+  } elseif($form['field']['type']['#value'] == 'user_reference'){
+    $field_entities = t('users');
+
+  } elseif ($form['field']['type']['#value'] == 'entityreference'){
+    $field_entities = t('entities');
+  }
+
   $form['field']['references_integrity_behavior'] = array(
     '#type' => 'radios',
     '#title' => t('Referential integrity behavior'),
@@ -30,15 +38,6 @@ function _references_integrity_field_settings_form_alter(&$form, $form_state, $f
     ),
   );
   $form['#submit'][] = '_references_integrity_field_settings_form_alter_submit';
-}
-
-/**
- * Additional submit handler for reference fields.
- */
-function _references_integrity_field_settings_form_alter_submit($form, &$form_state) {
-  $field =& $form_state['values']['field'];
-  variable_set('references_integrity_behavior_' . $field['field_name'], $field['references_integrity_behavior']);
-  variable_set('references_integrity_delete_message_' . $field['field_name'], $field['references_integrity_delete_message']);
 }
 
 /**

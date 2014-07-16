@@ -218,10 +218,17 @@ function references_integrity_apply($field_type, $object, $apply = TRUE) {
 
     // Process only if the admin enforced referential integrity.
     if ($field['ri_behavior'] == REFERENCES_INTEGRITY_BEHAVIOR_REMOVE_REFERENCE || $field['ri_behavior'] == REFERENCES_INTEGRITY_BEHAVIOR_REMOVE_ENTITY) {
+
+      if ($field['entity_type'] == 'node' && $id == 'target_id'){
+        $object_id = 'nid';
+      } else {
+        $object_id = $id;
+      }
+
       $query = new EntityFieldQuery;
       $query->entityCondition('entity_type', $field['entity_type']);
       $query->entityCondition('bundle', $field['bundle']);
-      $query->fieldCondition($field['field_name'], $id, $object->{$id}, '=');
+      $query->fieldCondition($field['field_name'], $id, $object->{$object_id}, '=');
       $result = $query->execute();
 
       if (isset($result[$field['entity_type']])) {
@@ -231,7 +238,7 @@ function references_integrity_apply($field_type, $object, $apply = TRUE) {
             'entity_id' => $entity_id,
             'field_name' => $field['field_name'],
             'column' => $id,
-            'references' => array($object->{$id}),
+            'references' => array($object->{$object_id}),
             'op' => $field['ri_behavior']
           );
 

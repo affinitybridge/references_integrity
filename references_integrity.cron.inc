@@ -12,6 +12,8 @@ function references_integrity_fetch() {
   $queue = DrupalQueue::get('references_integrity');
 
   $count = 1;
+  $references_integrity_cron_records_per_run = variable_get('references_integrity_cron_records_per_run', 50);
+
   while ($item = $queue->claimItem()) {
 
     // Load the entity.
@@ -42,7 +44,7 @@ function references_integrity_fetch() {
     $count++;
     $queue->deleteItem($item);
 
-    if ($count > REFERENCES_INTEGRITY_CRON) {
+    if ($count > $references_integrity_cron_records_per_run) {
       break;
     }
   }
