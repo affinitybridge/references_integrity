@@ -67,8 +67,8 @@ function references_integrity_orphan_references_check_all($reference_type = 'all
     array('data' => t('Bundle')),
     array('data' => t('Field')),
     array('data' => t('Type')),
-    array('data' => t('Records'), 'class' => 'references-integrity-cell-numeric'),
-    array('data' => t('Orphans'), 'class' => 'references-integrity-cell-numeric'),
+    array('data' => t('Records'), 'class' => 'references-integrity-cell-numeric references-integrity-record-count'),
+    array('data' => t('Orphans'), 'class' => 'references-integrity-cell-numeric references-integrity-orphan-count'),
     array('data' => t('Status'), 'class' => 'references-integrity-cell-status'),
   );
 
@@ -92,10 +92,12 @@ function references_integrity_orphan_references_check_all($reference_type = 'all
     $row[] = array('data' => $field_info['bundle_name'] . ' [' . $field_info['bundle'] . ']');
     $row[] = array('data' => $table_cell, 'title' => $field);
     $row[] = array('data' => $field_info['field_type']);
-    $row[] = array('data' => $field_info['count'], 'class' => 'references-integrity-cell-numeric');
-    $row[] = array('data' => $field_info['orphan'], 'class' => 'references-integrity-cell-numeric');
+    $row[] = array('data' => $field_info['count'], 'class' => 'references-integrity-cell-numeric references-integrity-record-count');
+    $row[] = array('data' => $field_info['orphan'], 'class' => 'references-integrity-cell-numeric references-integrity-orphan-count');
     $row[] = array('data' => $status, 'class' => 'references-integrity-cell-status');
-    $rows[] = array('data' => $row);
+    $class = array('class' => $field_info['entity_type'] . '-' . $field_info['bundle'] . '-' . $field_info['field_name']);
+
+    $rows[] = array('data' => $row, 'class' => $class);
   }
 
   $rows_count = count($rows);
@@ -172,6 +174,7 @@ function references_integrity_orphan_references_check_field($form, &$form_state,
             'reference_id' => $delta_item[$column],
             'language' => ($language_code == LANGUAGE_NONE) ? t('Neutral') : $language_code,
             'delta' => $delta,
+            'title' => array('data' => array('#title' => entity_label($entity_type, $entity))),
           );
         }
       }

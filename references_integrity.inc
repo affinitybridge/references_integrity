@@ -177,7 +177,7 @@ function references_integrity_get_target_entity_type_and_id($field){
     if ($field['type'] == 'user_reference'){
       $target_entity_type = 'user';
       $target_entity_id = 'uid';
-    } else if ($field['type'] == 'node_reference'){
+    } else if ($field['type'] == 'node_reference' || $field['entity_type'] == 'node'){
       $target_entity_type = 'node';
       $target_entity_id = 'nid';
     } elseif ($field['type'] == 'entityreference'){
