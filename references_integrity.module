@@ -170,11 +170,14 @@ function references_integrity_form_node_delete_confirm_alter(&$form, $form_state
   $items += references_integrity_apply(REFERENCES_INTEGRITY_REFERENCE_ENTITY, $form['#node'], FALSE);
 
   if (count($items)){
+    $message = '<div class="references_integrity_delete_message">';
     foreach($items as $item) {
-      $message = references_integrity_get_delete_message($item['field_name']);
+      $message .= references_integrity_get_delete_message($item['field_name']);
       $link = l(t('View referencing ' . $item['entity_type'] . '.'), 'node/' . $item['entity_id']);
-      drupal_set_message($message . ' ' . $link, 'warning');
+      $message .= ' ' . $link . '<br />';
     }
+    $message .= '</div>';
+    $form['description']['#markup'] = $message . $form['description']['#markup'];
   }
 }
 
