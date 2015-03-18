@@ -172,26 +172,55 @@ function references_integrity_get_field_info($field, $counters = TRUE) {
  *
  *  list($target_entity_type, $target_entity_id) = references_integrity_get_target_entity_type_and_id($field);
  */
-function references_integrity_get_target_entity_type_and_id($field){
-
-    if ($field['type'] == 'user_reference'){
-      $target_entity_type = 'user';
-      $target_entity_id = 'uid';
-    } else if ($field['type'] == 'node_reference' || $field['entity_type'] == 'node'){
-      $target_entity_type = 'node';
-      $target_entity_id = 'nid';
-    } elseif ($field['type'] == 'entityreference'){
-      if (isset($field['field_info']['settings']['target_type'])){
-        $target_entity_type = $field['field_info']['settings']['target_type'];
-      } else {
-        list($target_entity_type, $garbage) = each($field['foreign keys']);
-        $target_entity_type = str_replace('_data', '', $target_entity_type);
-      }
-      $target_entity_id = NULL;
+function references_integrity_get_target_entity_type_and_id($field) {
+  $field_info = $field;
+  if (isset($field['field_info'])) {
+    $field_info = $field['field_info'];
+  }
+  if (isset($field_info['type'])) {
+    switch ($field_info['type']) {
+      case 'node_reference':
+        return array('node', 'nid');
+        break;
+      case 'user_reference':
+        return array('user', 'uid');
+        break;
+      case 'entityreference':
+        if (isset($field_info['foreign keys'])) {
+          foreach ($field_info['foreign keys'] as $target_entity_type => $target_data) {
+            switch ($target_entity_type) {
+              case 'node':
+                return array('node', 'nid');
+                break;
+              case 'taxonomy_term_data':
+                return array('taxonomy_term', 'tid');
+                break;
+            }
+          }
+        }
+        break;
     }
-    return array($target_entity_type, $target_entity_id);
+    if (isset($field_info['foreign keys'])) {
+      $message = 'References Integrity could not handle the field type !field_type with foreign keys !foreign_keys';
+      $variables = array(
+        '!field_type' => $field_info['type'],
+        '!foreign_keys' => serialize($field_info['foreign keys']),
+      );
+      watchdog('references_integrity', $message, $variables);
+      drupal_set_message(t($message, $variables));
+      // Return node by default in order to not crash the page
+      return array('node', 'nid');
+    }
+  }
+  $message = 'References Integrity could not handle the field !field';
+  $variables = array(
+    '!field' => serialize($field),
+  );
+  watchdog('references_integrity', $message, $variables);
+  drupal_set_message(t($message, $variables));
+  // Return node by default in order to not crash the page
+  return array('node', 'nid');
 }
-
 
 /**
  * Apply referential integrity rule to the given object id.
