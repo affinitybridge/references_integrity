@@ -68,7 +68,7 @@ function references_integrity_menu() {
     'page callback' => 'references_integrity_orphan_references_check_all',
     'access arguments' => array('administer references integrity'),
     'file' => 'references_integrity.admin.inc',
-    'type' => MENU_LOCAL_TASK | MENU_NORMAL,
+    'type' => MENU_LOCAL_TASK | MENU_NORMAL_ITEM,
     'weight' => 10,
   );
 
