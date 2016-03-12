@@ -2,3 +2,4 @@ name = References Integrity
 description = This module provides a method to enforce referential integrity rules for References.
 package = Fields
 core = 7.x
+dependencies[] = entity

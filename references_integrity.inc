@@ -248,7 +248,7 @@ function references_integrity_apply($field_type, $object, $apply = TRUE) {
     // Process only if the admin enforced referential integrity.
     if ($field['ri_behavior'] == REFERENCES_INTEGRITY_BEHAVIOR_REMOVE_REFERENCE || $field['ri_behavior'] == REFERENCES_INTEGRITY_BEHAVIOR_REMOVE_ENTITY) {
 
-      if ($field['entity_type'] == 'node' && $id == 'target_id'){
+      if ($field['entity_type'] == 'node' && $id == 'target_id') {
         $object_id = 'nid';
       } else {
         $object_id = $id;

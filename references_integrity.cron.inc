@@ -11,7 +11,7 @@
 function references_integrity_fetch() {
   $queue = DrupalQueue::get('references_integrity');
 
-  $count = 1;
+  $count = 0;
   $references_integrity_cron_records_per_run = variable_get('references_integrity_cron_records_per_run', 50);
 
   while ($item = $queue->claimItem()) {
@@ -21,10 +21,10 @@ function references_integrity_fetch() {
     $entity_id = $item->data['entity_id'];
     $field_name = $item->data['field_name'];
     $column = $item->data['column'];
-    $entity = reset(entity_load($entity_type, array($entity_id)));
+    $entity = entity_load($entity_type, array($entity_id), array(), TRUE);
     $op = $item->data['op'];
 
-    if ($op == 'remove reference'){
+    if ($op == REFERENCES_INTEGRITY_BEHAVIOR_REMOVE_REFERENCE) {
       // Iterate deeply to find the reference.
       foreach ($entity->{$field_name} as $language_code => $delta_group) {
         foreach ($delta_group as $delta => $delta_item) {
@@ -36,7 +36,7 @@ function references_integrity_fetch() {
       entity_save($entity_type, $entity);
       watchdog('references_integrity', 'Orphan references: @orphans removed from field "@field_name", entity "@entity_type", @id = @entity_id', array('@orphans' => implode(', ', $item->data['references']), '@field_name' => $field_name, '@entity_type' => $entity_type, '@id' => $column, '@entity_id' => $entity_id));
 
-    } elseif ($op == 'remove entity'){
+    } elseif ($op == REFERENCES_INTEGRITY_BEHAVIOR_REMOVE_ENTITY) {
       entity_delete($entity_type, $entity_id);
       watchdog('references_integrity', 'Orphan references: @entity_type @entity_id deleted', array('@entity_type' => $entity_type, '@entity_id' => $entity_id));
     }
