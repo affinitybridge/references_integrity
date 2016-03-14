@@ -249,7 +249,7 @@ function references_integrity_orphan_references_check_field_validate($form, &$fo
  * Submit handler for the orphan references report for just one field form.
  */
 function references_integrity_orphan_references_check_field_submit($form, &$form_state) {
-  $values =& $form_state['values'];
+  $values = &$form_state['values'];
 
   $queue = DrupalQueue::get('references_integrity');
   $queue->createQueue();
