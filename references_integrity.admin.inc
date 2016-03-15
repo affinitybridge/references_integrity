@@ -54,7 +54,7 @@ function references_integrity_orphan_references_check_all($reference_type = 'all
 
   // Load information about all reference fields in the system.
   $reference_fields = array();
-  foreach (array('user_reference', 'node_reference', 'entityreference') as $field_type) {
+  foreach (references_integrity_references() as $field_type) {
     if ($field_type == $reference_type || $reference_type == 'all'){
       $reference_fields = array_merge($reference_fields, references_integrity_get_reference_fields($field_type));
     }
@@ -75,9 +75,8 @@ function references_integrity_orphan_references_check_all($reference_type = 'all
   $rows = array();
   $fields_with_orphan_records = FALSE;
   foreach ($reference_fields as $delta => $field_info) {
-    if (! $field_info['entity_name']){
-      continue;
-    }
+    if (!$field_info['entity_name']){ continue; }
+
     $row = array();
     $status = theme('references_integrity_status_icon', array('status' => $field_info['status'], 'title' => $field_status_titles[$field_info['status']]));
     $field = t($field_info['label']) .' ['. $field_info['field_name'] .']';
@@ -137,7 +136,7 @@ function references_integrity_orphan_references_check_field($form, &$form_state,
   // Include common module functions.
   module_load_include('inc', 'references_integrity');
   $value_column = references_integrity_get_value_column($field_type);
-  list($target_entity_type, $target_entity_id) = references_integrity_get_target_entity_type_and_id($field);
+  list($target_entity_type, $target_entity_id) = references_integrity_get_target_entity_type_and_property($field);
 
   $header = array(
     'entity_id' => array('data' => t('ID')),

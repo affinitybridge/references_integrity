@@ -36,7 +36,7 @@ function references_integrity_get_delete_message($field_name) {
   } elseif ($op == REFERENCES_INTEGRITY_BEHAVIOR_REMOVE_ENTITY){
     $default_message = t('Entities referencing this entity will be deleted too.');
   }
-  return variable_get('references_integrity_delete_message_' . $field_name, '');
+  return variable_get('references_integrity_delete_message_' . $field_name, $default_message);
 }
 
 /**
@@ -55,13 +55,13 @@ function references_integrity_get_reference_fields($field_type, $counters = TRUE
     }
     foreach ($entity as $bundle_name => $bundle) {
       foreach ($bundle as $field_name => $field) {
-        $field += field_info_field($field_name);
+        $field['info'] = field_info_field($field_name);
         $field += array(
           'entity_name' => $entity_info['label'],
           'bundle_name' => isset($entity_info['bundles'][$bundle_name]['label']) ? $entity_info['bundles'][$bundle_name]['label'] : NULL,
         );
-        if ($field['type'] == $field_type) {
-          $fields[] = references_integrity_get_field_info($field, $counters);
+        if ($field['info']['type'] == $field_type) {
+          $fields[$field['field_name']] = references_integrity_get_field_info($field, $counters);
         }
       }
     }
@@ -77,36 +77,38 @@ function references_integrity_get_reference_fields($field_type, $counters = TRUE
  *   The field to retrieve information from.
  */
 function references_integrity_get_field_info($field, $counters = TRUE) {
-  if (empty($field) || empty($field['field_name']) || empty($field['type']) || !in_array($field['type'], references_integrity_references())) {
+  if (empty($field) || empty($field['field_name']) || empty($field['info']['type']) || !in_array($field['info']['type'], references_integrity_references())) {
     return FALSE;
   }
   $counters_array = array('count' => 0, 'orphan' => 0, 'status' => 'ok');
 
   if ($counters) {
 
-    $value_column = references_integrity_get_value_column($field['type']);
+    $value_column = references_integrity_get_value_column($field['info']['type']);
 
     $query = new EntityFieldQuery;
 
     $query->entityCondition('entity_type', $field['entity_type']);
-    if ($field['entity_type'] != 'user'){
+
+    // If entity_type and bundle match, there is no bundle for this entity_type.
+    if ($field['entity_type'] !== $field['bundle']){
       $query->entityCondition('bundle', $field['bundle']);
     }
+
     $query->fieldCondition($field['field_name'], $value_column, 0, '>');
     $result = $query->execute();
 
     $total_count = $orphan_count = 0;
     while (list($type, $referring_entities) = each($result)) {
 
-      list($table, $field_info) = each($field['storage']['details']['sql'][FIELD_LOAD_CURRENT]);
-      list($column, $columnname) = each($field_info);
+      list($table, $field_info) = each($field['info']['storage']['details']['sql'][FIELD_LOAD_CURRENT]);
+      list($property, $columnname) = each($field_info);
 
       $references = array();
-      foreach (entity_load($field['entity_type'], array_keys($referring_entities)) as $entity_id => $entity) {
-        $name = $field['field_name'];
-        foreach ($entity->{$name} as $language_code => $delta_group) {
-          foreach ($delta_group as $delta => $delta_item) {
-            $references[] = $delta_item[$column];
+      foreach (entity_load($field['entity_type'], array_keys($referring_entities)) as $entity) {
+        foreach ($entity->{$field['field_name']} as $delta_group) {
+          foreach ($delta_group as $delta_item) {
+            $references[] = $delta_item[$property];
           }
         }
       }
@@ -114,7 +116,8 @@ function references_integrity_get_field_info($field, $counters = TRUE) {
       // Total count is the count of references, not of referring entities.
       $total_count = count($references);
 
-      list($target_entity_type, $target_entity_id) = references_integrity_get_target_entity_type_and_id($field);
+      list($target_entity_type, $target_entity_id) = references_integrity_get_target_entity_type_and_property($field);
+
       $valid_referenced_ids = array();
       // The ids of entities that actually exist
       if (!isset($target_entity_id)) {
@@ -129,11 +132,6 @@ function references_integrity_get_field_info($field, $counters = TRUE) {
           $valid_referenced_ids = array_keys($efq_result[$target_entity_type]);
         }
       }
-
-      // dpm('REFERENCES');
-      // dpm($references);
-      // dpm('REFERENCED IDS');
-      // dpm($valid_referenced_ids);
 
       $orphan_count = 0;
       foreach ($references as $i => $reference) {
@@ -156,7 +154,7 @@ function references_integrity_get_field_info($field, $counters = TRUE) {
     'bundle' => $field['bundle'],
     'bundle_name' => $field['bundle_name'],
     'field_name' => $field['field_name'],
-    'field_type' => $field['type'],
+    'field_type' => $field['info']['type'],
     'has_delta' => (!empty($field['multiple']) ? TRUE : FALSE),
     'label' => $field['label'],
     'ri_behavior' => references_integrity_get_field_behavior($field['field_name']),
@@ -164,54 +162,40 @@ function references_integrity_get_field_info($field, $counters = TRUE) {
 }
 
 /**
- *  function references_integrity_get_target_entity_type_and_id
+ *  function references_integrity_get_target_entity_type_and_property
  *
  *  - Return the foreign key information needed for the EFQ
  *
  *  @param $field
  *
- *  list($target_entity_type, $target_entity_id) = references_integrity_get_target_entity_type_and_id($field);
+ *  list($target_entity_type, $target_entity_id) = references_integrity_get_target_entity_type_and_property($field);
  */
-function references_integrity_get_target_entity_type_and_id($field) {
-  $field_info = $field;
-  if (isset($field['field_info'])) {
-    $field_info = $field['field_info'];
-  }
-  if (isset($field_info['type'])) {
-    switch ($field_info['type']) {
-      case 'node_reference':
-        return array('node', 'nid');
-        break;
-      case 'user_reference':
-        return array('user', 'uid');
-        break;
-      case 'entityreference':
-        if (isset($field_info['foreign keys'])) {
-          foreach ($field_info['foreign keys'] as $target_entity_type => $target_data) {
-            switch ($target_entity_type) {
-              case 'node':
-                return array('node', 'nid');
-                break;
-              case 'taxonomy_term_data':
-                return array('taxonomy_term', 'tid');
-                break;
-            }
-          }
-        }
-        break;
-    }
-    if (isset($field_info['foreign keys'])) {
-      $message = 'References Integrity could not handle the field type !field_type with foreign keys !foreign_keys';
-      $variables = array(
-        '!field_type' => $field_info['type'],
-        '!foreign_keys' => serialize($field_info['foreign keys']),
-      );
-      watchdog('references_integrity', $message, $variables);
-      drupal_set_message(t($message, $variables));
-      // Return node by default in order to not crash the page
+function references_integrity_get_target_entity_type_and_property($field) {
+  switch ($field['info']['type']) {
+    case 'node_reference':
       return array('node', 'nid');
-    }
+      break;
+    case 'user_reference':
+      return array('user', 'uid');
+      break;
+    case 'entityreference':
+      $entity_info = entity_get_info($field['info']['settings']['target_type']);
+      return array($field['info']['settings']['target_type'], $entity_info['entity keys']['id']);
+      break;
   }
+
+  if (isset($field['info']['foreign keys'])) {
+    $message = 'References Integrity could not handle the field type !field_type with foreign keys !foreign_keys';
+    $variables = array(
+      '!field_type' => $field['info']['type'],
+      '!foreign_keys' => serialize($field['info']['foreign keys']),
+    );
+    watchdog('references_integrity', $message, $variables);
+    drupal_set_message(t($message, $variables));
+    // Return node by default in order to not crash the page
+    return array('node', 'nid');
+  }
+
   $message = 'References Integrity could not handle the field !field';
   $variables = array(
     '!field' => serialize($field),
