@@ -166,8 +166,8 @@ function references_integrity_form_field_ui_field_settings_form_alter(&$form, $f
  */
 function references_integrity_form_node_delete_confirm_alter(&$form, $form_state) {
   module_load_include('inc', 'references_integrity');
-  $items = references_integrity_apply(REFERENCES_INTEGRITY_REFERENCE_NODE, $form['#node'], FALSE);
-  $items += references_integrity_apply(REFERENCES_INTEGRITY_REFERENCE_ENTITY, $form['#node'], FALSE);
+  $items = references_integrity_apply(REFERENCES_INTEGRITY_REFERENCE_NODE, 'node', $form['#node'], FALSE);
+  $items += references_integrity_apply(REFERENCES_INTEGRITY_REFERENCE_ENTITY, 'node', $form['#node'], FALSE);
 
   if (count($items)){
     $message = '<div class="references_integrity_delete_message">';
@@ -186,7 +186,7 @@ function references_integrity_form_node_delete_confirm_alter(&$form, $form_state
  */
 function references_integrity_node_delete($node) {
   module_load_include('inc', 'references_integrity');
-  references_integrity_apply(REFERENCES_INTEGRITY_REFERENCE_NODE, $node, TRUE);
+  references_integrity_apply(REFERENCES_INTEGRITY_REFERENCE_NODE, 'node', $node, TRUE);
 }
 
 /**
@@ -194,7 +194,7 @@ function references_integrity_node_delete($node) {
  */
 function references_integrity_user_delete($account) {
   module_load_include('inc', 'references_integrity');
-  references_integrity_apply(REFERENCES_INTEGRITY_REFERENCE_USER, $account, TRUE);
+  references_integrity_apply(REFERENCES_INTEGRITY_REFERENCE_USER, 'user', $account, TRUE);
 }
 
 /**
@@ -202,8 +202,9 @@ function references_integrity_user_delete($account) {
  */
 function references_integrity_entity_delete($entity, $type) {
   module_load_include('inc', 'references_integrity');
-  references_integrity_apply(REFERENCES_INTEGRITY_REFERENCE_ENTITY, $entity, TRUE);
+  references_integrity_apply(REFERENCES_INTEGRITY_REFERENCE_ENTITY, $type, $entity, TRUE);
 }
+
 /**
  * implements hook_cron().
  */
@@ -220,7 +221,12 @@ function references_integrity_cron() {
  *   Array with the referenceable field types.
  */
 function references_integrity_references() {
-  static $references = array(REFERENCES_INTEGRITY_REFERENCE_NODE, REFERENCES_INTEGRITY_REFERENCE_USER, REFERENCES_INTEGRITY_REFERENCE_ENTITY);
+  $references = array(
+    REFERENCES_INTEGRITY_REFERENCE_NODE,
+    REFERENCES_INTEGRITY_REFERENCE_USER,
+    REFERENCES_INTEGRITY_REFERENCE_ENTITY
+  );
+
   return $references;
 }
 
@@ -233,8 +239,13 @@ function references_integrity_references() {
  * @return
  *   String: "nid" or "uid" or "target_id".
  */
-function references_integrity_get_id_key($reference_type) {
-  static $keys = array(REFERENCES_INTEGRITY_REFERENCE_NODE => 'nid', REFERENCES_INTEGRITY_REFERENCE_USER => 'uid', REFERENCES_INTEGRITY_REFERENCE_ENTITY => 'target_id');
+function references_integrity_get_value_column($reference_type) {
+  $keys = array(
+    REFERENCES_INTEGRITY_REFERENCE_NODE => 'nid',
+    REFERENCES_INTEGRITY_REFERENCE_USER => 'uid',
+    REFERENCES_INTEGRITY_REFERENCE_ENTITY => 'target_id'
+  );
+
   return in_array($reference_type, array_keys($keys)) ? $keys[$reference_type] : FALSE;
 }
 

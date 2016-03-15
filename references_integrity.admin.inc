@@ -136,13 +136,13 @@ function references_integrity_orphan_references_check_field($form, &$form_state,
 
   // Include common module functions.
   module_load_include('inc', 'references_integrity');
-  $id = references_integrity_get_id_key($field_type);
+  $value_column = references_integrity_get_value_column($field_type);
   list($target_entity_type, $target_entity_id) = references_integrity_get_target_entity_type_and_id($field);
 
   $header = array(
     'entity_id' => array('data' => t('ID')),
     'entity' => array('data' => t('Entity')),
-    'reference_id' => array('data' => t('Orphaned @id (@type)', array('@id' => $id, '@type' => $field_type))),
+    'reference_id' => array('data' => t('Orphaned @value_column (@type)', array('@value_column' => $value_column, '@type' => $field_type))),
     'language' => array('data' => t('Language')),
     'delta' => array('data' => t('Delta')),
   );

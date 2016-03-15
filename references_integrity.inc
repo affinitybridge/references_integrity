@@ -84,7 +84,7 @@ function references_integrity_get_field_info($field, $counters = TRUE) {
 
   if ($counters) {
 
-    $id = references_integrity_get_id_key($field['type']);
+    $value_column = references_integrity_get_value_column($field['type']);
 
     $query = new EntityFieldQuery;
 
@@ -92,7 +92,7 @@ function references_integrity_get_field_info($field, $counters = TRUE) {
     if ($field['entity_type'] != 'user'){
       $query->entityCondition('bundle', $field['bundle']);
     }
-    $query->fieldCondition($field['field_name'], $id, 0, '>');
+    $query->fieldCondition($field['field_name'], $value_column, 0, '>');
     $result = $query->execute();
 
     $total_count = $orphan_count = 0;
@@ -228,15 +228,17 @@ function references_integrity_get_target_entity_type_and_id($field) {
  *
  * @param $field_type
  *   Field types supported are 'node_reference', 'user_reference', and 'entityreference'
- * @param $field_value
- *   A node id (nid), user id (uid), or entity_id.
+ * @param $value_entity_type
+ *   String name for entity type. (user, node, etc)
+ * @param $value_entity
+ *   A fully built entity that is a field value.
  * @param $apply (boolean)
  *   If false items will not be queued. Used to determined how many items will
  *   be modified.
  */
-function references_integrity_apply($field_type, $object, $apply = TRUE) {
-
-  $id = references_integrity_get_id_key($field_type);
+function references_integrity_apply($field_type, $value_entity_type, $value_entity, $apply = TRUE) {
+  $value_column = references_integrity_get_value_column($field_type);
+  list($value_entity_id) = entity_extract_ids($value_entity_type, $value_entity);
 
   $queue = DrupalQueue::get('references_integrity');
   $queue->createQueue();
@@ -248,40 +250,33 @@ function references_integrity_apply($field_type, $object, $apply = TRUE) {
     // Process only if the admin enforced referential integrity.
     if ($field['ri_behavior'] == REFERENCES_INTEGRITY_BEHAVIOR_REMOVE_REFERENCE || $field['ri_behavior'] == REFERENCES_INTEGRITY_BEHAVIOR_REMOVE_ENTITY) {
 
-      if ($field['entity_type'] == 'node' && $id == 'target_id') {
-        $object_id = 'nid';
-      } else {
-        $object_id = $id;
-      }
-
       $query = new EntityFieldQuery;
       $query->entityCondition('entity_type', $field['entity_type']);
       $query->entityCondition('bundle', $field['bundle']);
-      $query->fieldCondition($field['field_name'], $id, $object->{$object_id}, '=');
+      $query->fieldCondition($field['field_name'], $value_column, $value_entity_id, '=');
       $result = $query->execute();
 
       if (isset($result[$field['entity_type']])) {
-        foreach (entity_load($field['entity_type'], array_keys($result[$field['entity_type']])) as $entity_id => $entity) {
+        foreach (entity_load($field['entity_type'], array_keys($result[$field['entity_type']])) as $field_entity_id => $field_entity) {
           $item = array(
             'entity_type' => $field['entity_type'],
-            'entity_id' => $entity_id,
+            'entity_id' => $field_entity_id,
             'field_name' => $field['field_name'],
-            'column' => $id,
-            'references' => array($object->{$object_id}),
+            'column' => $value_column,
+            'references' => array($value_entity_id),
             'op' => $field['ri_behavior']
           );
 
+          // Queue the item for cron processing.
           if ($apply){
-            // Queue the item for cron processing.
             $queue->createItem($item);
-          } else {
-            $items[] = $item;
           }
+
+          $items[] = $item;
         }
       }
     }
   }
-  if (! $apply){
-    return $items;
-  }
+
+  return $items;
 }
