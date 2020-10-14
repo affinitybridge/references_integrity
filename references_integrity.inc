@@ -171,7 +171,14 @@ function references_integrity_get_field_info($field, $counters = TRUE) {
  *  list($target_entity_type, $target_entity_id) = references_integrity_get_target_entity_type_and_property($field);
  */
 function references_integrity_get_target_entity_type_and_property($field) {
+  // This is a bit of a hack, not sure if the index actually changed from
+  //   'info' to 'field_info'
+  if (empty($field['info']) && !empty($field['field_info'])) {
+    $field['info'] = $field['field_info'];
+  }
+
   switch ($field['info']['type']) {
+
     case 'node_reference':
       return array('node', 'nid');
       break;
